@@ -1,22 +1,28 @@
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
 import pandas as pd
+import time
 
-# Specify the path to the HTML file
-file_path = 'tests/sample1.html'
+# Setup Chrome WebDriver
+service = Service(ChromeDriverManager().install())
+driver = webdriver.Chrome(service=service)
 
-# Read the HTML file, specifically targeting the table with the ID 'appearances'
-tables = pd.read_html(file_path, attrs={'id': 'appearances'})
+# Open the webpage
+url = 'https://www.baseball-reference.com/teams/ARI/2023.shtml'
+driver.get(url)
 
-# Check if the table was correctly identified and extracted
+# Wait for JavaScript to load (adjust time as necessary)
+time.sleep(5)  # Increase or decrease based on your network speed and page complexity
+
+# Extract tables using Pandas
+tables = pd.read_html(driver.page_source, attrs={'id': 'appearances'})
+
 if tables:
-    # Assuming the table is the first (and only) in the list
     df = tables[0]
-
-    # Process the DataFrame, e.g., handling rows that contain 'All Star'
-    # Here, you might want to insert any specific processing you need for 'All Star' rows or other data clean-up
-    # Example: Remove rows where a specific column (e.g., player name) contains 'All Star'
-    # df = df[~df['Player'].str.contains('All Star', na=False)]
-
-    # Save the DataFrame to an Excel file
+    print(df)
     df.to_excel('output.xlsx', index=False)
 else:
     print("No table found with the specified ID 'appearances'")
+
+driver.quit()

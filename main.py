@@ -13,7 +13,9 @@ EXCLUDE 2020
 """
 
 
-def downloadTableFromURL(url):
+"""
+"""
+def downloadTableFromURL(url, team, year):
     # Setup Chrome WebDriver
     service = Service(ChromeDriverManager().install())
     driver = webdriver.Chrome(service=service)
@@ -25,18 +27,24 @@ def downloadTableFromURL(url):
     time.sleep(5)  # Increase or decrease based on your network speed and page complexity
 
     # Extract tables using Pandas
-    tables = pd.read_html(driver.page_source, attrs={'id': 'appearances'})
-
-    if tables:
-        df = tables[0]
-        print(df)
-        df.to_excel('data/output.xlsx', index=False)
-    else:
-        print("No table found with the specified ID 'appearances'")
+    try:
+        tables = pd.read_html(driver.page_source, attrs={'id': 'appearances'})
+        if tables:
+            df = tables[0]
+            print(df)
+            # Generate a filename using the team and year
+            filename = f"data/{team}_{year}.xlsx"
+            df.to_excel(filename, index=False)
+            print(f"Data saved to {filename}")
+        else:
+            print("No table found with the specified ID 'appearances'")
+    except Exception as e:
+        print(f"An error occurred: {e}")
 
     driver.quit()
 
-
+"""
+"""
 def downloadActiveFranchises(url):
     # Setup Chrome WebDriver
     service = Service(ChromeDriverManager().install())
@@ -89,7 +97,17 @@ def create_urls():
     for team in teams:
         for year in years:
             url = f"{base_url}{team}/{year}.shtml"
-            print(url)
-            urls.append(url)
+            urls.append((url, team, year))
 
     return urls
+
+
+"""
+"""
+def scrape():
+    urls = create_urls()
+    print(urls)
+    for url, team, year in urls:
+        downloadTableFromURL(url, team, year)
+
+scrape()

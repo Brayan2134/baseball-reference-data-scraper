@@ -1,22 +1,130 @@
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
 import pandas as pd
+import time
 
-# Specify the path to the HTML file
-file_path = 'tests/sample1.html'
+"""
+YEARS OF DATA THAT WILL BE GATHERED:
+--------------
+1990-2023
+EXCLUDE 1995
+EXCLUDE 2020
+"""
 
-# Read the HTML file, specifically targeting the table with the ID 'appearances'
-tables = pd.read_html(file_path, attrs={'id': 'appearances'})
 
-# Check if the table was correctly identified and extracted
-if tables:
-    # Assuming the table is the first (and only) in the list
-    df = tables[0]
+"""
+"""
+def downloadTableFromURL(url, team, year):
+    # Setup Chrome WebDriver
+    service = Service(ChromeDriverManager().install())
+    driver = webdriver.Chrome(service=service)
 
-    # Process the DataFrame, e.g., handling rows that contain 'All Star'
-    # Here, you might want to insert any specific processing you need for 'All Star' rows or other data clean-up
-    # Example: Remove rows where a specific column (e.g., player name) contains 'All Star'
-    # df = df[~df['Player'].str.contains('All Star', na=False)]
+    # Open the webpage
+    driver.get(url)
 
-    # Save the DataFrame to an Excel file
-    df.to_excel('output.xlsx', index=False)
-else:
-    print("No table found with the specified ID 'appearances'")
+    # Wait for JavaScript to load (adjust time as necessary)
+    time.sleep(2)  # Increase or decrease based on your network speed and page complexity
+
+    # Extract tables using Pandas
+    try:
+        tables = pd.read_html(driver.page_source, attrs={'id': 'appearances'})
+        if tables:
+            df = tables[0]
+            print(df)
+            # Generate a filename using the team and year
+            filename = f"data/{team}_{year}.xlsx"
+            df.to_excel(filename, index=False)
+            print(f"Data saved to {filename}")
+        else:
+            print("No table found with the specified ID 'appearances'")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+
+    driver.quit()
+
+"""
+"""
+def downloadActiveFranchises(url):
+    # Setup Chrome WebDriver
+    service = Service(ChromeDriverManager().install())
+    driver = webdriver.Chrome(service=service)
+
+    # Open the webpage
+    driver.get(url)
+
+    # Wait for JavaScript to load (adjust time as necessary)
+    time.sleep(5)  # Increase or decrease based on your network speed and page complexity
+
+    # Extract tables using Pandas
+    tables = pd.read_html(driver.page_source, attrs={'id': 'teams_active'})
+
+    if tables:
+        df = tables[0]
+        print("Original Data:")
+        print(df)
+
+        # Filter rows: remove rows where 'Franchise' column contains "Also played as" or ", see"
+        conditions = df['Franchise'].str.contains("Also played as", na=False) | df['Franchise'].str.contains(", see",
+                                                                                                             na=False)
+        df_cleaned = df[~conditions]
+        print("\nCleaned Data:")
+        print(df_cleaned)
+
+        # Save the cleaned data to Excel
+        df_cleaned.to_excel('data/output_cleaned.xlsx', index=False)
+    else:
+        print("No table found with the specified ID 'teams_active'")
+
+    driver.quit()
+
+
+"""
+This function will create a URL
+for each baseball team of the format
+baseball-reference.com/teams/[3 LETTER TEAM (scoreboard) CODE]/yyyy.shtml
+"""
+def create_urls():
+    base_url = "https://www.baseball-reference.com/teams/"
+    teams = [
+        "ARI", "ATL", "BAL", "BOS", "CHC", "CWS", "CIN", "CLE", "COL", "DET",
+        "HOU", "KCR", "LAA", "LAD", "MIA", "MIL", "MIN", "NYM", "NYY", "OAK",
+        "PHI", "PIT", "SDP", "SFG", "SEA", "STL", "TBR", "TEX", "TOR", "WSN"
+    ]
+    years = [year for year in range(1990, 2024) if year not in (1995, 2020)]
+    urls = []
+
+    for team in teams:
+        for year in years:
+            url = f"{base_url}{team}/{year}.shtml"
+            urls.append((url, team, year))
+
+    return urls
+
+
+"""
+"""
+def scrape():
+    urls = create_urls()
+
+    # Find the start index for the specific URL
+    start_index = next((i for i, (url, team, year) in enumerate(urls) if team == "PHI" and year == 2004), None)
+    if start_index is not None:
+        print(f"Starting from index {start_index}, URL: {urls[start_index]}")
+        urls_to_process = urls[start_index:]  # Create a new list starting from the desired URL
+    else:
+        print("Specified start URL not found. Processing all URLs.")
+        urls_to_process = urls
+
+    # Loop through the filtered list
+    for url, team, year in urls_to_process:
+        downloadTableFromURL(url, team, year)
+
+    """
+    urls = create_urls()
+    print(urls)
+    for url, team, year in urls:
+        downloadTableFromURL(url, team, year)
+    """
+
+scrape()

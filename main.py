@@ -24,7 +24,7 @@ def downloadTableFromURL(url, team, year):
     driver.get(url)
 
     # Wait for JavaScript to load (adjust time as necessary)
-    time.sleep(5)  # Increase or decrease based on your network speed and page complexity
+    time.sleep(2)  # Increase or decrease based on your network speed and page complexity
 
     # Extract tables using Pandas
     try:
@@ -106,8 +106,25 @@ def create_urls():
 """
 def scrape():
     urls = create_urls()
+
+    # Find the start index for the specific URL
+    start_index = next((i for i, (url, team, year) in enumerate(urls) if team == "PHI" and year == 2004), None)
+    if start_index is not None:
+        print(f"Starting from index {start_index}, URL: {urls[start_index]}")
+        urls_to_process = urls[start_index:]  # Create a new list starting from the desired URL
+    else:
+        print("Specified start URL not found. Processing all URLs.")
+        urls_to_process = urls
+
+    # Loop through the filtered list
+    for url, team, year in urls_to_process:
+        downloadTableFromURL(url, team, year)
+
+    """
+    urls = create_urls()
     print(urls)
     for url, team, year in urls:
         downloadTableFromURL(url, team, year)
+    """
 
 scrape()

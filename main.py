@@ -1,15 +1,18 @@
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
+from bs4 import BeautifulSoup
+import requests
 import pandas as pd
 import time
+import os
 
 """
 YEARS OF DATA THAT WILL BE GATHERED:
 --------------
 1990-2023
-EXCLUDE 1995
-EXCLUDE 2020
+EXCLUDE 1995 (because of protests)
+EXCLUDE 2020 (because of COVID)
 """
 
 
@@ -127,4 +130,103 @@ def scrape():
         downloadTableFromURL(url, team, year)
     """
 
-scrape()
+"""
+"""
+def parse_record(record_str):
+    # Split the string by the dash and convert each part to an integer
+    wins, losses, ties = map(int, record_str.split('-'))
+    return wins, losses, ties
+
+
+
+"""
+"""
+def fetch_record(url):
+    # Send a GET request to the specified URL
+    response = requests.get(url)
+    # Check if the request was successful
+    if response.status_code == 200:
+        # Parse the HTML content
+        soup = BeautifulSoup(response.text, 'html.parser')
+        # Find the <strong> tag that contains the text 'Record:'
+        record_tag = soup.find('strong', string='Record:')
+
+        # Check if the tag was found
+        if record_tag:
+            # The next_sibling should contain the record text
+            record_data = record_tag.next_sibling.strip()
+            # Clean and return the record data
+            return record_data.split(',')[0].strip()  # Splits on comma and returns the first part
+        else:
+            return "Record not found"
+    else:
+        return f"Failed to retrieve page with status code {response.status_code}"
+
+
+def generate_urls_from_files(directory):
+    # Dictionary to store filenames and their URLs
+    file_urls = {}
+
+    # Iterate over each file in the directory
+    for filename in os.listdir(directory):
+        if filename.endswith(".xlsx") and len(filename.split('_')) == 2:
+            # Split the filename to extract the team code and year
+            team_code, year_with_extension = filename.split('_')
+            year = year_with_extension.split('.')[0]  # Remove the '.xlsx' extension
+
+            # Generate the URL
+            url = f"https://www.baseball-reference.com/teams/{team_code}/{year}.shtml"
+            file_urls[filename] = url
+
+            # Optionally, read the XLSX file
+            # filepath = os.path.join(directory, filename)
+            # df = pd.read_excel(filepath)
+            # Here you can process df as needed
+
+    return file_urls
+
+
+"""
+"""
+def append_to_excel(file_path, data):
+    df = pd.read_excel(file_path)
+    df['Wins'] = data[0]
+    df['Losses'] = data[1]
+    df['Ties'] = data[2]
+    df.to_excel(file_path, index=False)
+
+"""
+"""
+
+
+# Main function to handle the entire process
+def process_files(directory):
+    file_count = 0
+    for filename in os.listdir(directory):
+        if filename.endswith(".xlsx") and len(filename.split('_')) == 2:
+            team_code, year_with_extension = filename.split('_')
+            year = year_with_extension.split('.')[0]  # Remove the '.xlsx' extension
+            url = f"https://www.baseball-reference.com/teams/{team_code}/{year}.shtml"
+
+            record_str = fetch_record(url)
+            if record_str:
+                wins, losses, ties = parse_record(record_str)
+                if wins is not None and losses is not None and ties is not None:
+                    file_path = os.path.join(directory, filename)
+                    append_to_excel(file_path, (wins, losses, ties))
+                    print(f"Processed {filename} successfully.")
+                else:
+                    print(f"Error parsing record for {filename}.")
+            else:
+                print(f"Error fetching record for {filename}.")
+
+            file_count += 1
+            if file_count % 10 == 0:
+                print("Reached 10 requests, pausing for 60 seconds.")
+                time.sleep(60)  # Pause the execution for 60 seconds
+
+
+directory = "data/"
+process_files(directory)
+
+#print(parse_record(fetch_record("https://www.baseball-reference.com/teams/ARI/2018.shtml")))

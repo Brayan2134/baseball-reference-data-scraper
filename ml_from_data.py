@@ -109,6 +109,54 @@ def predict_future_record(model, future_war):
     return future_record[0]
 
 
+# Helper function to categorize the metrics
+def categorize_metric(value, metric_name):
+    categories = {
+        'R2': [(0.85, float('inf'), 'Very Good'),
+               (0.75, 0.85, 'Good'),
+               (0.6, 0.75, 'Satisfactory'),
+               (None, 0.6, 'Not Satisfactory')],
+        'NSE': [(0.8, float('inf'), 'Very Good'),
+                (0.7, 0.8, 'Good'),
+                (0.5, 0.7, 'Satisfactory'),
+                (None, 0.5, 'Not Satisfactory')],
+        'PBIAS': [(None, 5, 'Very Good'),
+                  (5, 10, 'Good'),
+                  (10, 15, 'Satisfactory'),
+                  (15, float('inf'), 'Not Satisfactory')],
+        'ME': [(None, 0.25, 'Very Good'),
+               (0.25, 0.5, 'Good'),
+               (0.5, 1.0, 'Satisfactory'),
+               (1.0, float('inf'), 'Not Satisfactory')],
+        'MAE': [(None, 0.5, 'Very Good'),
+                (0.5, 0.75, 'Good'),
+                (0.75, 1.5, 'Satisfactory'),
+                (1.5, float('inf'), 'Not Satisfactory')],
+        'RMSE': [(None, 0.75, 'Very Good'),
+                 (0.75, 1.0, 'Good'),
+                 (1.0, 2.0, 'Satisfactory'),
+                 (2.0, float('inf'), 'Not Satisfactory')],
+        'RSR': [(None, 0.5, 'Very Good'),
+                (0.5, 0.6, 'Good'),
+                (0.6, 0.7, 'Satisfactory'),
+                (0.7, float('inf'), 'Not Satisfactory')],
+    }
+
+    # Adjust for metrics where lower values are better
+    lower_is_better = ['PBIAS', 'ME', 'MAE', 'RMSE', 'RSR']
+    if metric_name in lower_is_better:
+        value = abs(value)
+
+    for lower, upper, category in categories[metric_name]:
+        if lower is None:
+            lower = -float('inf')
+        if upper is None:
+            upper = float('inf')
+        if lower < value <= upper:
+            return category
+    return 'Undefined'
+
+
 def model_metrics(y_true, y_pred):
     """
     Calculate and display statistical metrics.
@@ -129,10 +177,11 @@ def model_metrics(y_true, y_pred):
     metrics['PBIAS'] = 100 * sum(y_true - y_pred) / sum(y_true)
     metrics['RSR'] = metrics['RMSE'] / np.std(y_true)
 
-    # Display the metrics
+    # Display the metrics with qualitative assessment
     print("\nModel Metrics:")
     for key, value in metrics.items():
-        print(f"{key}: {value:.3f}")
+        category = categorize_metric(value, key)
+        print(f"{key}: {value:.3f} - {category}")
     return metrics
 
 

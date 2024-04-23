@@ -1,4 +1,4 @@
-# baseball-reference-data-scraper
+# baseball-reference.com Data Scraper
 This repo scrapes data from baseball-reference.com *Note: No data will be scraped from 2024 as the season is still young.*
 
 # Website Structure
@@ -25,3 +25,10 @@ This repo scrapes data from baseball-reference.com *Note: No data will be scrape
     <li>Then, create a correlation plot between WAR and team record.</li>
     <li>Finally, predict a teams 2024 record based on said ML model.</li>
 </ol>
+
+## Running the program
+It's as simple as running the file appropriate to what the developer wishes to get. 
+<ul>
+    <li>Run *website_scraper.py* to get data. Instructions/customization are found at the top of the file.</li>
+    <li>Run *ml_from_data.py* to run the linear regression ML model. Customization is found at the bottom of the file.</li>
+</ul>

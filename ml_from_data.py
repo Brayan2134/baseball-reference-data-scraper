@@ -228,4 +228,4 @@ if __name__ == "__main__":
     # Example prediction for a future WAR value
     future_war = 35  # Example WAR value
     predicted_wins = predict_future_record(model, future_war)
-    print(f"Predicted Wins for 2024 based on WAR {future_war}: {predicted_wins}")
+    print(f"Predicted (Wins,Losses) for 2024 based on WAR {future_war}: {predicted_wins}, {162-predicted_wins}")

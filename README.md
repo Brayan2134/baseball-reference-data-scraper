@@ -1,13 +1,19 @@
 # baseball-reference.com Data Scraper
 This repo scrapes data from baseball-reference.com *Note: No data will be scraped from 2024 as the season is still young.*
 
+# Introduction
+This repository is my for CS2410 -- Fundamentals of Data Science class -- Capstone (final) project. The goal of this project is to show what my team and I learned throughout the semester. I developed and created the ML model, while my team verified the integrity of the dataset, cleaned, and prepared the data.
+
+## Presentation
+The accompanying PPTX presentation for the files can be found under `./presentation`.
+
 # Website Structure
 
 ## Root
 *baseball-reference.com/* is the entrypoint for the website. For scraping purposes, this is irrelevant since we want TEAM data, not current news.
 
 ## All Teams
-*baseball-reference.com/teams/* is where all the current/former baseball teams live. For this project, the script will pull the 30 active MLB teams from the **Actice Franchises** table.
+*baseball-reference.com/teams/* is where all the current/former baseball teams live. For this project, the script will pull the 30 active MLB teams from the **Active Franchises** table.
 
 ## Team Specific Pages
 *baseball-reference.com/teams/[3 LETTER TEAM (scoreboard) CODE]* is a teams individual page. This includes all seasons (including from previous team names/locations). The code will pull from the **Franchise History** table.
